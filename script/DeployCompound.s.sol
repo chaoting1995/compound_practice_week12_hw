@@ -29,7 +29,7 @@ contract DeployCompound is Script {
     function run() public {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
   
-  address admin = vm.envAddress("wallet");
+        address admin = vm.envAddress("MY_ADDRESS");
         vm.startBroadcast(key);
 
         // 部署 Unitroller
