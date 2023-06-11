@@ -135,11 +135,14 @@ contract TestCompound is TestCompoundSetUpTokenB {
         // 該處設定還 10A
         uint repayAmountOfTokenA = 10 * tokenA.decimals();
 
-        CTokenInterface cTokenB = CTokenInterface(address(cTokenB));
-        
+        CTokenInterface cTokenBCollateral = CTokenInterface(address(cTokenB));
+
         // user2 發動清算
         tokenA.approve(address(cTokenA), borrowTokenABalance);
-        cTokenA.liquidateBorrow(user1, repayAmountOfTokenA, cTokenB);
+        cTokenA.liquidateBorrow(user1, repayAmountOfTokenA, cTokenBCollateral);
       }
+      
+      // 清算成功，獲得抵押品 cTokenB
+      console.log("user2", cTokenB.balanceOf(user2));
     }
 }
