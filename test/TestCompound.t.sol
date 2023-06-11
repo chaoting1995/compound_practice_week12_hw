@@ -130,11 +130,13 @@ contract TestCompound is TestCompoundSetUpTokenB {
       
       // shortfall > 0 即 liquidity 實際上 < 0，代表 user1 可被清算
       if (liquidity == 0 && shortfall > 0) {
-        CTokenInterface cTokenB = CTokenInterface(address(cTokenB));
+        
         // user1 的可被清算債務 = 債務 * 清算係數 =  50A * 50% = 25A
         // 該處設定還 10A
         uint repayAmountOfTokenA = 10 * tokenA.decimals();
 
+        CTokenInterface cTokenB = CTokenInterface(address(cTokenB));
+        
         // user2 發動清算
         tokenA.approve(address(cTokenA), borrowTokenABalance);
         cTokenA.liquidateBorrow(user1, repayAmountOfTokenA, cTokenB);
