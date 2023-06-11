@@ -116,7 +116,9 @@ contract TestCompound is TestCompoundSetUpTokenB {
       vm.startPrank(admin); // admin 才能 -> 調整 tokenB 的 Collateral Factor & mint tokenA
       
       // 調整 tokenB 的 Collateral Factor 50% -> 40%
+      // accountLiquidity = 1B * 1 * 100USD/B * 40% - 50B * 1USD/A = -10
       unitrollerProxy._setCollateralFactor(CToken(address(cTokenB)), 40 / 100 * 1e18);
+
       // 給 Liquidator User2 50 顆（50 * 10^18） TokenA，使其具備清算能力
       tokenA.mint(user2, borrowTokenABalance);
 
@@ -126,12 +128,12 @@ contract TestCompound is TestCompoundSetUpTokenB {
       vm.startPrank(user2);
       
       // 檢查 user1 可否被清算
-      (, uint liquidity, uint shortfall) = unitrollerProxy.getAccountLiquidity(address(user1));
+      (uint error, uint liquidity, uint shortfall) = unitrollerProxy.getAccountLiquidity(user1);
       
       // shortfall > 0 即 liquidity 實際上 < 0，代表 user1 可被清算
-      if (liquidity == 0 && shortfall > 0) {
+      if (error == 0 && liquidity == 0 && shortfall > 0) {
         
-        // user1 的可被清算債務 = 債務 * 清算係數 =  50A * 50% = 25A
+        // user1 的可被清算債務 = 債務 * 清算係數 = 50A * 50% = 25A
         // 該處設定還 10A
         uint repayAmountOfTokenA = 10 * tokenA.decimals();
 
@@ -142,6 +144,67 @@ contract TestCompound is TestCompoundSetUpTokenB {
         cTokenA.liquidateBorrow(user1, repayAmountOfTokenA, cTokenBCollateral);
       }
       
+      // 清算成功，獲得抵押品 cTokenB
+      console.log("user2", cTokenB.balanceOf(user2));
+    }
+
+    // 延續 (3.) 的借貸場景，調整 oracle 中 token B 的價格，讓 User1 被 User2 清算
+    function test_user2_liquidate_user1_by_modifier_oracleprice_of_tokenb() public {
+
+      // setting within `TestCompoundSetUpTokenA` & `TestCompoundSetUpTokenB`
+      // address[] memory cTokenAddr = new address[](2);
+      // cTokenAddr[0] = address(cTokenB);
+      // cTokenAddr[1] = address(cTokenA);
+      // unitrollerProxy.enterMarkets(cTokenAddr);
+      
+      // ------------------------------------------------------------------------------
+      // (3.) 的借貸場景
+      // mint 1 顆 tokenA(CTokenA)
+      tokenB.approve(address(cTokenB), initialTokenBBalance);
+      cTokenB.mint(initialTokenBBalance);
+
+      // User1 使用 token B 作為抵押品來借出 50 顆 token A
+      cTokenA.borrow(borrowTokenABalance);
+      // ------------------------------------------------------------------------------
+      // 借好借滿，此時 user1 的 Account liquidity = 0
+      // accountLiquidity = collatarelBalanceOfCTokenB * exchangeRateOfCTokenB * oraclePriceOfCTokenB * collateralFactorOfCTokenB - borrowBalanceOfCTokenA * oraclePriceOfCTokenA
+      // = 1B * 1 * 100USD/B * 50% - 50B * 1USD/A = 0
+
+      vm.stopPrank();
+
+      // ------------------------------------------------------------------------------
+      vm.startPrank(admin); // admin 才能 -> 調整 調整 token B 的 oracle price
+
+      // 調整 tokenB 的 Oracle Price 100USD/B -> 10USD/B
+      // accountLiquidity = 1B * 1 * 10USD/B * 50% - 50B * 1USD/A = 5 - 50 = -45
+      priceOracle.setDirectPrice(address(tokenB), 1 * 1e18);
+      
+      // 給 Liquidator User2 50 顆（50 * 10^18） TokenA，使其具備清算能力
+      tokenA.mint(user2, borrowTokenABalance);
+
+      vm.stopPrank();
+
+      // ------------------------------------------------------------------------------
+
+      vm.startPrank(user2);
+
+      // 檢查 user1 可否被清算
+      (uint error, uint liquidity, uint shortfall) = unitrollerProxy.getAccountLiquidity(user1);
+      
+      // shortfall > 0 即 liquidity 實際上 < 0，代表 user1 可被清算
+      if (error == 0 && liquidity == 0 && shortfall > 0) {
+        
+        // user1 的可被清算債務 = 債務 * 清算係數 = 50A * 50% = 25A
+        // 該處設定還 10A
+        uint repayAmountOfTokenA = 10 * tokenA.decimals();
+
+        CTokenInterface cTokenBCollateral = CTokenInterface(address(cTokenB));
+
+        // user2 發動清算
+        tokenA.approve(address(cTokenA), borrowTokenABalance);
+        cTokenA.liquidateBorrow(user1, repayAmountOfTokenA, cTokenBCollateral);
+      }
+
       // 清算成功，獲得抵押品 cTokenB
       console.log("user2", cTokenB.balanceOf(user2));
     }
