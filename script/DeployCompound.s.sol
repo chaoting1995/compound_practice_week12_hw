@@ -38,7 +38,7 @@ contract DeployCompound is Script {
     // 使用 `WhitePaperInterestRateModel` 作為利率模型，利率模型合約中的借貸利率設定為 0%
     // 初始 exchangeRate 為 1:1
     
-    function setup() public {
+    function setUp() public {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         
         // 部署 Unitroller
