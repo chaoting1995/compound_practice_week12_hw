@@ -17,7 +17,7 @@
 
 ### run project
 
-#### Step1: setting `.env.example`
+#### Step1: setting `.env`
 ```
 PRIVATE_KEY=
 MY_ADDRESS=
