@@ -19,7 +19,7 @@ contract DeployCompound is Script {
     ERC20 public testCoin;
     CErc20Delegator public cTestCoin;
     CErc20Delegate public cErc20Delegate;
-    WhitePaperInterestRateModel	public whitePaper;
+    WhitePaperInterestRateModel	public whitePaperInterestRateModel;
     Unitroller public unitroller;
     Comptroller public comptroller;
     Comptroller public unitrollerProxy;
@@ -69,7 +69,7 @@ contract DeployCompound is Script {
         testCoin = new ERC20("Test Coin", "TEST");
 
         // 使用 `WhitePaperInterestRateModel` 作為利率模型，利率模型合約中的借貸利率設定為 0%
-        WhitePaperInterestRateModel whitePaperInterestRateModel = new WhitePaperInterestRateModel(0,0);
+        whitePaperInterestRateModel = new WhitePaperInterestRateModel(0,0);
         
         // 部署 CErc20Delegator 的 Implementation 合約 CErc20Delegate
         cErc20Delegate = new CErc20Delegate();
