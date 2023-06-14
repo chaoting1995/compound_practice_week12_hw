@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 import "./helper/MyERC20.sol";
 // import "./helper/TestCompoundSetUpTokenA.t.sol";
@@ -10,13 +11,17 @@ import "./helper/TestCompoundSetUpTokenB.t.sol";
 contract TestCompound is TestCompoundSetUpTokenB {
     address public user1 = makeAddr("user1");
     address public user2 = makeAddr("user2"); // liquidator
-    uint256 public initialTokenABalance = 100 * tokenA.decimals();
-    uint256 public initialTokenBBalance = 1 * tokenB.decimals();
-    uint256 public borrowTokenABalance = 50 * tokenA.decimals();
+    uint256 public initialTokenABalance;
+    uint256 public initialTokenBBalance;
+    uint256 public borrowTokenABalance;
 
     function setUp() public override {
         super.setUp(); //init cTokenA, cTokenB
 
+        initialTokenABalance = 100 * 10 ** tokenA.decimals();
+        initialTokenBBalance = 1 * 10 ** tokenB.decimals();
+        borrowTokenABalance = 50 * 10 ** tokenA.decimals();
+        
         vm.startPrank(admin);
 
         // 給 User1  100 顆（100 * 10^18） TokenA
@@ -27,6 +32,7 @@ contract TestCompound is TestCompoundSetUpTokenB {
         // 在 Oracle 中設定一顆 token A 的價格為 $1，一顆 token B 的價格為 $100
         priceOracle.setDirectPrice(address(tokenA), 1 * 1e18);
         priceOracle.setDirectPrice(address(tokenB), 10 * 1e18);
+        vm.stopPrank();
     }
 
     function test_initial_balance() public {
@@ -53,6 +59,7 @@ contract TestCompound is TestCompoundSetUpTokenB {
         cTokenA.redeem(initialTokenABalance);
 
         assertEq(tokenA.balanceOf(user1), initialTokenABalance);
+        vm.stopPrank();
     }
 
     // 讓 User1 borrow/repay
@@ -142,6 +149,7 @@ contract TestCompound is TestCompoundSetUpTokenB {
         // user2 發動清算
         tokenA.approve(address(cTokenA), borrowTokenABalance);
         cTokenA.liquidateBorrow(user1, repayAmountOfTokenA, cTokenBCollateral);
+        vm.stopPrank();
       }
       
       // 清算成功，獲得抵押品 cTokenB
@@ -150,6 +158,7 @@ contract TestCompound is TestCompoundSetUpTokenB {
 
     // 延續 (3.) 的借貸場景，調整 oracle 中 token B 的價格，讓 User1 被 User2 清算
     function test_user2_liquidate_user1_by_modifier_oracleprice_of_tokenb() public {
+      vm.startPrank(user1);
 
       // setting within `TestCompoundSetUpTokenA` & `TestCompoundSetUpTokenB`
       // address[] memory cTokenAddr = new address[](2);
@@ -196,7 +205,7 @@ contract TestCompound is TestCompoundSetUpTokenB {
         
         // user1 的可被清算債務 = 債務 * 清算係數 = 50A * 50% = 25A
         // 該處設定還 10A
-        uint repayAmountOfTokenA = 10 * tokenA.decimals();
+        uint repayAmountOfTokenA = 10 * 10 ** tokenA.decimals();
 
         CTokenInterface cTokenBCollateral = CTokenInterface(address(cTokenB));
 
@@ -207,5 +216,7 @@ contract TestCompound is TestCompoundSetUpTokenB {
 
       // 清算成功，獲得抵押品 cTokenB
       console.log("user2", cTokenB.balanceOf(user2));
+      
+      vm.stopPrank();
     }
 }
