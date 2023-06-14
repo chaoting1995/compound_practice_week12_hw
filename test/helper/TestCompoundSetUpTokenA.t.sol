@@ -65,15 +65,19 @@ contract TestCompoundSetUpTokenA is Test {
           18,
           payable(admin),
           address(cTokenADelegate),
-          new bytes(0x0)
+          new bytes(0x00)
       );
 
       // ------------------------------------------------------------------------------------
       
-      cTokenA._setReserveFactor(0.1 * 1e18);
+      cTokenA._setReserveFactor(0.25 * 1e18);
+      cTokenA._setImplementation(address(cTokenADelegate), false, new bytes(0x00));
+
       unitrollerProxy._supportMarket(CToken(address(cTokenA)));
-      unitrollerProxy._setCollateralFactor(CToken(address(cTokenA)), 0.8 * 1e18);
+      
+      // 注意：先設定 OraclePrice 再設定 CollateralFactor
       priceOracle.setUnderlyingPrice(CToken(address(cTokenA)), 1e18);
+      unitrollerProxy._setCollateralFactor(CToken(address(cTokenA)), 0.8 * 1e18);
 
       vm.stopPrank();
     }

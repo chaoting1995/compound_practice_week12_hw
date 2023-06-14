@@ -68,16 +68,20 @@ contract TestCompoundSetUpTokenB is TestCompoundSetUpTokenA {
           18,
           payable(admin),
           address(cTokenBDelegate),
-          new bytes(0x0)
+          new bytes(0x00)
       );
 
       // ------------------------------------------------------------------------------------
       
-      cTokenB._setReserveFactor(0.1 * 1e18);
+      cTokenB._setReserveFactor(0.25 * 1e18);
+      cTokenB._setImplementation(address(cTokenBDelegate), false, new bytes(0x00));
+
       unitrollerProxy._supportMarket(CToken(address(cTokenB)));
+
+      // 注意：先設定 OraclePrice 再設定 CollateralFactor
+      priceOracle.setUnderlyingPrice(CToken(address(cTokenB)), 1e18);
       // Token B 的 collateral factor 為 50%
       unitrollerProxy._setCollateralFactor(CToken(address(cTokenB)), 0.5 * 1e18);
-      priceOracle.setUnderlyingPrice(CToken(address(cTokenB)), 1e18);
       
       vm.stopPrank();
     }

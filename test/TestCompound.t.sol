@@ -31,12 +31,13 @@ contract TestCompound is TestCompoundSetUpTokenB {
 
         // 在 Oracle 中設定一顆 token A 的價格為 $1，一顆 token B 的價格為 $100
         priceOracle.setDirectPrice(address(tokenA), 1 * 1e18);
-        priceOracle.setDirectPrice(address(tokenB), 10 * 1e18);
+        priceOracle.setDirectPrice(address(tokenB), 100 * 1e18);
+
         vm.stopPrank();
     }
 
     function test_initial_balance() public {
-        console.log("initialTokenABalance", initialTokenABalance);
+        console.log("initialTokenABalance", initialTokenABalance); // 100_000000000000000000
         assertEq(tokenA.balanceOf(user1), initialTokenABalance);
     }
 
@@ -53,10 +54,11 @@ contract TestCompound is TestCompoundSetUpTokenB {
 
         // User1 使用 100 顆（100 * 10^18） ERC20 去 mint 出 100 cERC20 token
         cTokenA.mint(initialTokenABalance);
-        console.log("cTokenA balance",cTokenA.balanceOf(user1));
+        console.log("cTokenA balance before mint",cTokenA.balanceOf(user1)); // 100_000000000000000000
 
         // 再用 100 cERC20 token redeem 回 100 顆 ERC20
         cTokenA.redeem(initialTokenABalance);
+        console.log("cTokenA balance before redeem",cTokenA.balanceOf(user1)); // 0
 
         assertEq(tokenA.balanceOf(user1), initialTokenABalance);
         vm.stopPrank();
@@ -66,17 +68,23 @@ contract TestCompound is TestCompoundSetUpTokenB {
     function test_borrow_and_repay() public {
       vm.startPrank(user1);
 
-      // setting within `TestCompoundSetUpTokenA` & `TestCompoundSetUpTokenB`
-      // address[] memory cTokenAddresses = new address[](2);
-      // cTokenAddresses[0] = address(cTokenB);
-      // cTokenAddresses[1] = address(cTokenA);
-      // unitrollerProxy.enterMarkets(cTokenAddresses);
+      // 由 user1 調用 unitroller 的 enterMarkets 方法
+      // 因為 mintAllowed 函數會檢查：require(markets[cToken].isListed), 故即使在mint中也需要先調用enterMarkets
+      address[] memory cTokenAddresses = new address[](2);
+      cTokenAddresses[0] = address(cTokenB);
+      cTokenAddresses[1] = address(cTokenA);
+      unitrollerProxy.enterMarkets(cTokenAddresses);
 
       // Token B 的 collateral factor 為 50%, setting within `TestCompoundSetUpTokenB`
 
       // User1 使用 1 顆 token B 來 mint cToken
       tokenB.approve(address(cTokenB), initialTokenBBalance);
       cTokenB.mint(initialTokenBBalance);
+
+      (uint error, uint liquidity, uint shortfall) = unitrollerProxy.getAccountLiquidity(user1);
+      console.log("error",error);
+      console.log("liquidity",liquidity);
+      console.log("shortfall",shortfall);
 
       // User1 使用 token B 作為抵押品來借出 50 顆 token A
       cTokenA.borrow(borrowTokenABalance);
@@ -98,11 +106,10 @@ contract TestCompound is TestCompoundSetUpTokenB {
     function test_user2_liquidate_user1_by_modifier_collateral_factor() public {
       vm.startPrank(user1);
 
-      // setting within `TestCompoundSetUpTokenA` & `TestCompoundSetUpTokenB`
-      // address[] memory cTokenAddr = new address[](2);
-      // cTokenAddr[0] = address(cTokenB);
-      // cTokenAddr[1] = address(cTokenA);
-      // unitrollerProxy.enterMarkets(cTokenAddr);
+      address[] memory cTokenAddress = new address[](2);
+      cTokenAddress[0] = address(cTokenB);
+      cTokenAddress[1] = address(cTokenA);
+      unitrollerProxy.enterMarkets(cTokenAddress);
       
       // ------------------------------------------------------------------------------
       // (3.) 的借貸場景
@@ -161,10 +168,10 @@ contract TestCompound is TestCompoundSetUpTokenB {
       vm.startPrank(user1);
 
       // setting within `TestCompoundSetUpTokenA` & `TestCompoundSetUpTokenB`
-      // address[] memory cTokenAddr = new address[](2);
-      // cTokenAddr[0] = address(cTokenB);
-      // cTokenAddr[1] = address(cTokenA);
-      // unitrollerProxy.enterMarkets(cTokenAddr);
+      address[] memory cTokenAddresses = new address[](2);
+      cTokenAddresses[0] = address(cTokenB);
+      cTokenAddresses[1] = address(cTokenA);
+      unitrollerProxy.enterMarkets(cTokenAddresses);
       
       // ------------------------------------------------------------------------------
       // (3.) 的借貸場景
