@@ -39,9 +39,9 @@ contract TestCompoundSetUpTokenA is Test {
       unitroller._setPendingImplementation(address(comptroller));
       comptroller._become(unitroller);
 
+      unitrollerProxy._setPriceOracle(priceOracle);
       unitrollerProxy._setCloseFactor(0.5 * 1e18);
       unitrollerProxy._setLiquidationIncentive(1.05 * 1e18);
-      unitrollerProxy._setPriceOracle(priceOracle);
 
       // ------------------------------------------------------------------------------------
 

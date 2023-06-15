@@ -154,7 +154,8 @@ contract TestCompound is TestCompoundSetUpTokenB {
       // shortfall > 0 即 liquidity 實際上 < 0，代表 user1 可被清算
       if (error == 0 && liquidity == 0 && shortfall > 0) {
         
-        // user1 的可被清算債務 = 債務 * 清算係數 = 50A * 50% = 25A
+        // 單筆交易的清算量，不能超過被清算賬戶的最大可清算量(清算係數 Close Factor)
+        // user1 的最大可清算量 = 債務 * 清算係數 = 50A * 50% = 25A
         // 該處設定還 10A
         uint repayAmountOfTokenA = 10 * tokenA.decimals();
 
@@ -174,7 +175,6 @@ contract TestCompound is TestCompoundSetUpTokenB {
     function test_user2_liquidate_user1_by_modifier_oracleprice_of_tokenb() public {
       vm.startPrank(user1);
 
-      // setting within `TestCompoundSetUpTokenA` & `TestCompoundSetUpTokenB`
       address[] memory cTokenAddresses = new address[](2);
       cTokenAddresses[0] = address(cTokenB);
       cTokenAddresses[1] = address(cTokenA);
@@ -200,7 +200,7 @@ contract TestCompound is TestCompoundSetUpTokenB {
 
       // 調整 tokenB 的 Oracle Price 100USD/B -> 10USD/B
       // accountLiquidity = 1B * 1 * 10USD/B * 50% - 50B * 1USD/A = 5 - 50 = -45
-      priceOracle.setDirectPrice(address(tokenB), 1 * 1e18);
+      priceOracle.setDirectPrice(address(tokenB), 10 * 1e18);
       
       // 給 Liquidator User2 50 顆（50 * 10^18） TokenA，使其具備清算能力
       tokenA.mint(user2, borrowTokenABalance);
@@ -213,15 +213,22 @@ contract TestCompound is TestCompoundSetUpTokenB {
 
       // 檢查 user1 可否被清算
       (uint error, uint liquidity, uint shortfall) = unitrollerProxy.getAccountLiquidity(user1);
-      
+      console.log("error",error);
+      console.log("liquidity",liquidity);
+      console.log("shortfall",shortfall); // 45_000000000000000000
+
       // shortfall > 0 即 liquidity 實際上 < 0，代表 user1 可被清算
       if (error == 0 && liquidity == 0 && shortfall > 0) {
         
-        // user1 的可被清算債務 = 債務 * 清算係數 = 50A * 50% = 25A
+        // 單筆交易的清算量，不能超過被清算賬戶的最大可清算量(清算係數 Close Factor)
+        // user1 的最大可清算量 = 債務 * 清算係數 = 50A * 50% = 25A
         // 該處設定還 10A
-        uint repayAmountOfTokenA = 10 * 10 ** tokenA.decimals();
+        uint repayAmountOfTokenA = 1 * 10 ** tokenA.decimals();
 
         CTokenInterface cTokenBCollateral = CTokenInterface(address(cTokenB));
+
+        (, uint seizeTokens) = unitrollerProxy.liquidateCalculateSeizeTokens(address(cTokenB),address(cTokenBCollateral), repayAmountOfTokenA);
+        console.log("seizeTokens", seizeTokens);
 
         // user2 發動清算
         tokenA.approve(address(cTokenA), borrowTokenABalance);
