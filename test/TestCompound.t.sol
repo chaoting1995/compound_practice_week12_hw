@@ -33,6 +33,11 @@ contract TestCompound is TestCompoundSetUpTokenB {
         priceOracle.setDirectPrice(address(tokenA), 1 * 1e18);
         priceOracle.setDirectPrice(address(tokenB), 100 * 1e18);
 
+        // 先存入一些 tokenA，讓 pool cTokenA 有 tokenA 能借出
+        tokenA.mint(admin, 100 * 1e18);
+        tokenA.approve(address(cTokenA), 100* 1e18);
+        cTokenA.mint(100 * 1e18);
+
         vm.stopPrank();
     }
 
@@ -85,6 +90,8 @@ contract TestCompound is TestCompoundSetUpTokenB {
       console.log("error",error);
       console.log("liquidity",liquidity);
       console.log("shortfall",shortfall);
+      
+      console.log("tokenA.balanceOf(address(this))",tokenA.balanceOf(address(this)));
 
       // User1 使用 token B 作為抵押品來借出 50 顆 token A
       cTokenA.borrow(borrowTokenABalance);
