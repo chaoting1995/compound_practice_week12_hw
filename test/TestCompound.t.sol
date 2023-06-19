@@ -26,7 +26,7 @@ import {
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 
-import { CompoundSetup } from "./helper/CompoundSetup.t.sol";
+import { TestCompoundSetup } from "./helper/TestCompoundSetup.t.sol";
 
 // TODO: Inherit IFlashLoanSimpleReceiver
 contract AaveFlashLoan is IFlashLoanSimpleReceiver {
