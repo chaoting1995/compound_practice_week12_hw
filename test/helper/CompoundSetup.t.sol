@@ -4,10 +4,6 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
-
 import { Unitroller } from "compound-protocol/contracts/Unitroller.sol";
 import { ComptrollerInterface } from "compound-protocol/contracts/ComptrollerInterface.sol";
 import { Comptroller } from "compound-protocol/contracts/Comptroller.sol";
@@ -24,9 +20,8 @@ import { CErc20 } from "compound-protocol/contracts/CErc20.sol";
 import { CToken } from "compound-protocol/contracts/CToken.sol";
 
 import { ERC20 } from "openzeppelin/token/ERC20/ERC20.sol";
-import "./MyERC20.sol";
 
-contract TestCompound is Test {
+contract CompoundSetup is Test {
     Unitroller public unitroller;
     Comptroller public comptroller;
     Comptroller public unitrollerProxy;
