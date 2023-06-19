@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-import { ERC20 } from "compound-protocol/contracts/token/ERC20/ERC20.sol";
-import { IERC20 } from "compound-protocol/contracts/token/ERC20/IERC20.sol";
+import { ERC20 } from "openzeppelin/token/ERC20/ERC20.sol";
+import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { CErc20Delegator } from "compound-protocol/contracts/CErc20Delegator.sol";
 import { CErc20Delegate } from "compound-protocol/contracts/CErc20Delegate.sol";
 import { CErc20 } from "compound-protocol/contracts/CErc20.sol";
