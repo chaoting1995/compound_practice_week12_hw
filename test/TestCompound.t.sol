@@ -46,7 +46,7 @@ contract AaveFlashLoan is IFlashLoanSimpleReceiver {
       CErc20Delegate cUSDCDelegate;
       CErc20Delegator cUSDC;
       CErc20Delegate cUniDelegate;
-      CErc20Delegator cUNI;
+      CErc20Delegator cUni;
   }
 
   function execute(
@@ -60,7 +60,7 @@ contract AaveFlashLoan is IFlashLoanSimpleReceiver {
     CErc20Delegate _cUSDCDelegate,
     CErc20Delegator _cUSDC,
     CErc20Delegate _cUniDelegate,
-    CErc20Delegator _cUNI
+    CErc20Delegator _cUni
    ) external {
       CallbackData memory callbackUsed = CallbackData({
           liquidator: _liquidator,
@@ -73,7 +73,7 @@ contract AaveFlashLoan is IFlashLoanSimpleReceiver {
           cUSDCDelegate: _cUSDCDelegate,
           cUSDC: _cUSDC,
           cUniDelegate:_cUniDelegate,
-          cUNI:_cUNI
+          cUni:_cUni
       });
       //borrow 1250e6 and let flashloan contract callback to this contract
       POOL().flashLoanSimple(address(this),address(USDC),1250e6, abi.encode(callbackUsed) ,0);
@@ -97,13 +97,13 @@ contract AaveFlashLoan is IFlashLoanSimpleReceiver {
       //we can liquidate this account if this condition is pass
       if (error == 0 && liquidity == 0 && shortfall>0)
       {
-          CTokenInterface cUNIToken = CTokenInterface(address(callBackData.cUNI));
+          CTokenInterface cUniToken = CTokenInterface(address(callBackData.cUni));
           uint repayAmount = 1250e6;
-          callBackData.cUSDC.liquidateBorrow(callBackData.borrower, repayAmount, cUNIToken);
+          callBackData.cUSDC.liquidateBorrow(callBackData.borrower, repayAmount, cUniToken);
       }
-      //redeem cUNI to UNI
-      uint cUniBalanceOfLiquidator = callBackData.cUNI.balanceOf(address(this));
-      callBackData.cUNI.redeem(cUniBalanceOfLiquidator);  
+      //redeem cUni to UNI
+      uint cUniBalanceOfLiquidator = callBackData.cUni.balanceOf(address(this));
+      callBackData.cUni.redeem(cUniBalanceOfLiquidator);  
       //get 325.08 UNI 
 
       //approve uni to uniswap_router for safe transferFrom
@@ -166,15 +166,15 @@ contract AaveLiquidate is CompoundSetup{
     function test_user_borrow_usdc() public {
         vm.startPrank(user1);
 
-        //mint 1000 uni token to cUNI and borrow the USDC
+        //mint 1000 uni token to cUni and borrow the USDC
         uint mintAmount = 1000e18;
-        uniUnderLying.approve(address(cUNI),mintAmount);
-        cUNI.mint(mintAmount);
+        uniUnderLying.approve(address(cUni),mintAmount);
+        cUni.mint(mintAmount);
 
-        //enter market for cUNI
+        //enter market for cUni
         //用 1000 UNI 去借 2500 USDC
         address[] memory cTokenAddr = new address[](1);
-        cTokenAddr[0] = address(cUNI);
+        cTokenAddr[0] = address(cUni);
         unitrollerProxy.enterMarkets(cTokenAddr);
         cUSDC.borrow(2500e6);
         vm.stopPrank();
@@ -186,17 +186,17 @@ contract AaveLiquidate is CompoundSetup{
         //與上一測試項目相同，先讓 User1 借錢
         vm.startPrank(user1);
         uint mintAmount = 1000e18;
-        uniUnderLying.approve(address(cUNI),mintAmount);
-        cUNI.mint(mintAmount);
+        uniUnderLying.approve(address(cUni),mintAmount);
+        cUni.mint(mintAmount);
         address[] memory cTokenAddr = new address[](1);
-        cTokenAddr[0] = address(cUNI);
+        cTokenAddr[0] = address(cUni);
         unitrollerProxy.enterMarkets(cTokenAddr);
         cUSDC.borrow(2500e6);
         vm.stopPrank();
 
         //調整 UNI 價格為 4，造成 user1 產生 shortfall
         vm.startPrank(admin);
-        priceOracle.setUnderlyingPrice(CToken(address(cUNI)), 4e18);
+        priceOracle.setUnderlyingPrice(CToken(address(cUni)), 4e18);
         vm.stopPrank();
 
         //讓 Liquidator 清算 user1 (Aave 借款)
@@ -212,7 +212,7 @@ contract AaveLiquidate is CompoundSetup{
           cUSDCDelegate,
           cUSDC,
           cUniDelegate,
-          cUNI
+          cUni
         );
         vm.stopPrank();
         console.log(IERC20(usdcTokenAddress).balanceOf(address(aave)));
@@ -223,17 +223,17 @@ contract AaveLiquidate is CompoundSetup{
         //與上一測試項目相同，先讓 User1 借錢
         vm.startPrank(user1);
         uint mintAmount = 1000e18;
-        uniUnderLying.approve(address(cUNI),mintAmount);
-        cUNI.mint(mintAmount);
+        uniUnderLying.approve(address(cUni),mintAmount);
+        cUni.mint(mintAmount);
         address[] memory cTokenAddr = new address[](1);
-        cTokenAddr[0] = address(cUNI);
+        cTokenAddr[0] = address(cUni);
         unitrollerProxy.enterMarkets(cTokenAddr);
         cUSDC.borrow(2500e6);
         vm.stopPrank();
 
         //調整 UNI 價格為 4，造成 user1 產生 shortfall
         vm.startPrank(admin);
-        priceOracle.setUnderlyingPrice(CToken(address(cUNI)), 4e18);
+        priceOracle.setUnderlyingPrice(CToken(address(cUni)), 4e18);
         vm.stopPrank();
 
         //純粹打錢給 Liquidator，測試清算是否成功，因此最終結果會少了 flashload 的借款續費用
@@ -247,13 +247,13 @@ contract AaveLiquidate is CompoundSetup{
         //可被清算
         if (error == 0 && liquidity == 0 && shortfall>0)
         {
-            CTokenInterface cUNIToken = CTokenInterface(address(cUNI));
+            CTokenInterface cUniToken = CTokenInterface(address(cUni));
             uint repayAmount = liquidateAmount;
-            cUSDC.liquidateBorrow(user1, repayAmount, cUNIToken);
+            cUSDC.liquidateBorrow(user1, repayAmount, cUniToken);
         }
-        //redeem cUNI to UNI
-        uint cUniBalanceOfLiquidator = cUNI.balanceOf(liquidator);
-        cUNI.redeem(cUniBalanceOfLiquidator);
+        //redeem cUni to UNI
+        uint cUniBalanceOfLiquidator = cUni.balanceOf(liquidator);
+        cUni.redeem(cUniBalanceOfLiquidator);
         //取得 328.05 UNI
 
         //approve uni to router for safe transferFrom
