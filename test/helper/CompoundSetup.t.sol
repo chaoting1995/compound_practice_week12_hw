@@ -94,7 +94,7 @@ contract CompoundSetup is Test {
             address(cUni),
             ComptrollerInterface(address(unitroller)),
             InterestRateModel(address(whitePaperInterestRateModel)),
-            1e6, // initialExchangeRateMantissa_ 
+            1e18, // initialExchangeRateMantissa_ 
             "cUni",
             "cUni",
             18,  // decimals_
@@ -111,8 +111,8 @@ contract CompoundSetup is Test {
         // 美元 scale 成合約使用的尺度
         //cUSDC.decimal // 6 -> 18 + 18 - 6 = 30  -> 1 * 10^30
         //cUni.decimal // 18 -> 18 + 18 - 18 =1 8 -> 5 * 10^18
-        priceOracle.setUnderlyingPrice(CToken(address(cUSDC)), 1e30);
-        priceOracle.setUnderlyingPrice(CToken(address(cUni)), 5e18);
+        priceOracle.setUnderlyingPrice(CToken(address(cUSDC)), 1 * 1e30);
+        priceOracle.setUnderlyingPrice(CToken(address(cUni)), 5 * 1e18);
 
         unitrollerProxy._supportMarket(CToken(address(cUSDC)));
         unitrollerProxy._supportMarket(CToken(address(cUni)));
@@ -120,6 +120,7 @@ contract CompoundSetup is Test {
         // 基本設定：設定 UNI 的 collateral factor 為 50%
         // 注意：先設定 OraclePrice 再設定 CollateralFactor
         unitrollerProxy._setCollateralFactor(CToken(address(cUSDC)), 0.5 * 1e18);
+        unitrollerProxy._setCollateralFactor(CToken(address(cUni)), 0.5 * 1e18);
 
         vm.stopPrank();
     }
