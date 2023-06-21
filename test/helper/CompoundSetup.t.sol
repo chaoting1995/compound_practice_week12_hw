@@ -68,7 +68,7 @@ contract CompoundSetup is Test {
         // cUSDC
         cUSDCDelegate = new CErc20Delegate();      
         cUSDC = new CErc20Delegator(
-            address(cUSDC),
+            address(usdc),
             ComptrollerInterface(address(unitroller)),
             InterestRateModel(address(whitePaperInterestRateModel)),
             1e6, // initialExchangeRateMantissa_ 
@@ -88,10 +88,10 @@ contract CompoundSetup is Test {
         cUSDC._setReserveFactor(0);
 
         // ------------------------------------------------------------------------------------
-        // cUSDC
+        // cUni
         cUniDelegate = new CErc20Delegate();      
         cUni = new CErc20Delegator(
-            address(cUni),
+            address(uni),
             ComptrollerInterface(address(unitroller)),
             InterestRateModel(address(whitePaperInterestRateModel)),
             1e18, // initialExchangeRateMantissa_ 

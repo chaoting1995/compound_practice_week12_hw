@@ -19,8 +19,9 @@ import { CErc20 } from "compound-protocol/contracts/CErc20.sol";
 import { CToken } from "compound-protocol/contracts/CToken.sol";
 import { CTokenInterface } from "compound-protocol/contracts/CTokenInterfaces.sol";
 
-import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
-import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
+
+import { ISwapRouter } from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 
 // TODO: Inherit IFlashLoanSimpleReceiver
 contract FlashLoanLiquidate is IFlashLoanSimpleReceiver {
